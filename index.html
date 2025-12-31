@@ -1,0 +1,1581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HiChord Audio Test</title>
+  <style>
+    :root {
+      --white: #FAFAFA;
+      --black: #0A0A0A;
+      --orange: #FF6B35;
+      --gray: #6B6B6B;
+      --light-gray: #F2F2F2;
+      --border: #DADADA;
+      --green: #10b981;
+      --red: #ef4444;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', 'Segoe UI', 'Roboto', sans-serif;
+      background: var(--white);
+      color: var(--black);
+      min-height: 100vh;
+    }
+
+    /* Navigation */
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 32px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-logo {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--black);
+      text-decoration: none;
+      letter-spacing: 0.05em;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 24px;
+    }
+
+    .nav-links a {
+      color: var(--gray);
+      text-decoration: none;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover,
+    .nav-links a.active {
+      color: var(--orange);
+    }
+
+    /* Main Container */
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 48px 24px;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+
+    .header h1 {
+      font-size: 32px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      color: var(--gray);
+      font-size: 14px;
+    }
+
+    /* Card */
+    .card {
+      background: var(--white);
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      padding: 32px;
+      margin-bottom: 24px;
+    }
+
+    .card-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--gray);
+      margin-bottom: 16px;
+    }
+
+    /* Input Source */
+    .source-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    .source-tab {
+      flex: 1;
+      padding: 14px;
+      background: var(--white);
+      border: 2px solid var(--border);
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--gray);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .source-tab:hover {
+      border-color: var(--black);
+      color: var(--black);
+    }
+
+    .source-tab.active {
+      background: var(--black);
+      border-color: var(--black);
+      color: var(--white);
+    }
+
+    .source-content {
+      display: none;
+    }
+
+    .source-content.active {
+      display: block;
+    }
+
+    /* Upload Zone */
+    .upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: 6px;
+      padding: 32px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .upload-zone:hover {
+      border-color: var(--orange);
+      background: rgba(255, 107, 53, 0.05);
+    }
+
+    .upload-zone.has-file {
+      border-style: solid;
+      border-color: var(--green);
+      background: rgba(16, 185, 129, 0.05);
+    }
+
+    .upload-icon {
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+
+    .upload-text {
+      font-size: 14px;
+      color: var(--gray);
+    }
+
+    .upload-text span {
+      color: var(--orange);
+      font-weight: 600;
+    }
+
+    .file-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--black);
+      margin-top: 8px;
+    }
+
+    /* Live Source Info */
+    .live-info {
+      text-align: center;
+      padding: 24px;
+      background: var(--light-gray);
+      border-radius: 6px;
+    }
+
+    .live-info p {
+      font-size: 14px;
+      color: var(--gray);
+    }
+
+    /* Toggle Switch */
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 0;
+      border-top: 1px solid var(--border);
+      margin-top: 16px;
+    }
+
+    .toggle-label {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .toggle {
+      position: relative;
+      width: 48px;
+      height: 28px;
+    }
+
+    .toggle input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--border);
+      border-radius: 28px;
+      transition: 0.2s;
+    }
+
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 22px;
+      width: 22px;
+      left: 3px;
+      bottom: 3px;
+      background: var(--white);
+      border-radius: 50%;
+      transition: 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+
+    .toggle input:checked + .toggle-slider {
+      background: var(--orange);
+    }
+
+    .toggle input:checked + .toggle-slider:before {
+      transform: translateX(20px);
+    }
+
+    /* Result Display */
+    .result-card {
+      text-align: center;
+      padding: 48px 32px;
+      border-width: 3px;
+    }
+
+    .result-card.testing {
+      border-color: var(--orange);
+      background: rgba(255, 107, 53, 0.05);
+    }
+
+    .result-card.pass {
+      border-color: var(--green);
+      background: rgba(16, 185, 129, 0.08);
+    }
+
+    .result-card.fail {
+      border-color: var(--red);
+      background: rgba(239, 68, 68, 0.08);
+    }
+
+    .result-status {
+      font-size: 48px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 8px;
+    }
+
+    .result-card.testing .result-status {
+      color: var(--orange);
+    }
+
+    .result-card.pass .result-status {
+      color: var(--green);
+    }
+
+    .result-card.fail .result-status {
+      color: var(--red);
+    }
+
+    .result-detail {
+      font-size: 14px;
+      color: var(--gray);
+    }
+
+    /* Spectrum */
+    .spectrum-container {
+      background: var(--black);
+      border-radius: 6px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    #spectrumCanvas {
+      width: 100%;
+      height: 150px;
+      display: block;
+    }
+
+    .spectrum-info {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 8px;
+      font-size: 11px;
+      color: var(--gray);
+      font-family: 'SF Mono', 'Monaco', monospace;
+    }
+
+    /* Input Level Meter */
+    .level-meter {
+      margin-top: 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .level-meter-label {
+      font-size: 11px;
+      color: var(--gray);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      min-width: 50px;
+    }
+
+    .level-meter-bar {
+      flex: 1;
+      height: 8px;
+      background: #333;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .level-meter-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--green) 0%, var(--green) 70%, var(--orange) 85%, var(--red) 100%);
+      border-radius: 4px;
+      transition: width 0.05s;
+    }
+
+    .level-meter-value {
+      font-size: 11px;
+      color: var(--white);
+      font-family: 'SF Mono', 'Monaco', monospace;
+      min-width: 55px;
+      text-align: right;
+    }
+
+    .input-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      margin-top: 8px;
+    }
+
+    .input-status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--gray);
+    }
+
+    .input-status-dot.active {
+      background: var(--green);
+      animation: pulse 1s infinite;
+    }
+
+    .input-status-dot.no-signal {
+      background: var(--red);
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px 32px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      border: 2px solid var(--black);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      min-width: 160px;
+    }
+
+    .btn-primary {
+      background: var(--black);
+      color: var(--white);
+    }
+
+    .btn-primary:hover {
+      background: var(--orange);
+      border-color: var(--orange);
+    }
+
+    .btn-primary:disabled {
+      background: var(--border);
+      border-color: var(--border);
+      color: var(--gray);
+      cursor: not-allowed;
+    }
+
+    .btn-stop {
+      background: var(--red);
+      border-color: var(--red);
+      color: var(--white);
+    }
+
+    .btn-stop:hover {
+      background: #dc2626;
+      border-color: #dc2626;
+    }
+
+    .btn-outline {
+      background: var(--white);
+      color: var(--black);
+    }
+
+    .btn-outline:hover {
+      background: var(--black);
+      color: var(--white);
+    }
+
+    .test-buttons {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+
+    /* Recording indicator */
+    .recording-badge {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--red);
+      margin-bottom: 16px;
+      justify-content: center;
+    }
+
+    .recording-badge.active {
+      display: flex;
+    }
+
+    .recording-dot {
+      width: 10px;
+      height: 10px;
+      background: var(--red);
+      border-radius: 50%;
+      animation: blink 1s infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    /* Recordings list */
+    .recordings-list {
+      margin-top: 24px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+
+    .recording-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: var(--light-gray);
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+
+    .recording-item.playing {
+      background: rgba(255, 107, 53, 0.1);
+      border: 1px solid var(--orange);
+    }
+
+    .recording-item.pass {
+      border-left: 4px solid var(--green);
+    }
+
+    .recording-item.fail {
+      border-left: 4px solid var(--red);
+    }
+
+    .recording-name {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .recording-result {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .recording-item.pass .recording-result {
+      color: var(--green);
+    }
+
+    .recording-item.fail .recording-result {
+      color: var(--red);
+    }
+
+    .btn-small {
+      padding: 8px 16px;
+      font-size: 11px;
+      min-width: auto;
+    }
+
+    /* Connect status */
+    .connect-status {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 24px;
+      margin-bottom: 16px;
+      background: var(--light-gray);
+      border-radius: 6px;
+    }
+
+    .connect-icon {
+      font-size: 24px;
+      color: var(--gray);
+    }
+
+    .connect-icon.connected {
+      color: var(--green);
+    }
+
+    .connect-text {
+      font-size: 14px;
+      color: var(--gray);
+    }
+
+    .connect-text.connected {
+      color: var(--green);
+      font-weight: 600;
+    }
+
+    /* Hidden */
+    .hidden {
+      display: none !important;
+    }
+
+    /* Settings collapse */
+    .settings-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0;
+      cursor: pointer;
+      border-top: 1px solid var(--border);
+      margin-top: 16px;
+    }
+
+    .settings-toggle span {
+      font-size: 12px;
+      color: var(--gray);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .settings-toggle .arrow {
+      transition: transform 0.2s;
+    }
+
+    .settings-toggle.open .arrow {
+      transform: rotate(180deg);
+    }
+
+    .settings-content {
+      display: none;
+      padding-top: 16px;
+    }
+
+    .settings-content.open {
+      display: block;
+    }
+
+    .setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .setting-row label {
+      font-size: 13px;
+    }
+
+    .setting-row input[type="range"] {
+      width: 120px;
+    }
+
+    .setting-value {
+      font-size: 12px;
+      color: var(--orange);
+      font-weight: 600;
+      min-width: 70px;
+      text-align: right;
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="nav">
+    <a href="https://hichord.shop" class="nav-logo">HICHORD</a>
+    <div class="nav-links">
+      <a href="https://manual.hichord.shop">Manual</a>
+      <a href="https://app.hichord.shop">App</a>
+      <a href="https://updater.hichord.shop">Updater</a>
+      <a href="audio-jack-test.html" class="active">Audio Test</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h1>Audio Test</h1>
+      <p>Test HiChord for high-pitched whine</p>
+    </div>
+
+    <!-- Step 1: Input Source -->
+    <div class="card">
+      <div class="card-title">1. Select Audio Source</div>
+
+      <div class="source-tabs">
+        <button class="source-tab" id="tabFile">Upload File</button>
+        <button class="source-tab active" id="tabLive">Live Input</button>
+      </div>
+
+      <div class="source-content" id="contentFile">
+        <div class="upload-zone" id="uploadZone">
+          <input type="file" id="fileInput" accept="audio/*" style="display:none">
+          <div class="upload-icon">📁</div>
+          <div class="upload-text">Drop file here or <span>click to browse</span></div>
+          <div class="file-name" id="fileName"></div>
+        </div>
+      </div>
+
+      <div class="source-content active" id="contentLive">
+        <div class="live-info">
+          <p>Connect HiChord to your audio interface</p>
+          <p style="margin-top: 8px; font-size: 12px; color: #999;">Plug in HiChord and turn it on, but don't play anything. We're detecting the whine that occurs during silence.</p>
+        </div>
+      </div>
+
+      <div class="toggle-row">
+        <span class="toggle-label">Record Audio</span>
+        <label class="toggle">
+          <input type="checkbox" id="recordToggle" checked>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Step 2: Connect -->
+    <div class="card" id="connectCard">
+      <div class="card-title">2. Connect</div>
+      <div class="connect-status" id="connectStatus">
+        <div class="connect-icon" id="connectIcon">○</div>
+        <div class="connect-text" id="connectText">Not connected</div>
+      </div>
+      <div class="test-buttons">
+        <button class="btn btn-primary" id="connectBtn">Connect Audio</button>
+        <button class="btn btn-outline hidden" id="disconnectBtn">Disconnect</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Test -->
+    <div class="card">
+      <div class="card-title">3. Run Test</div>
+
+      <div class="recording-badge" id="recordingBadge">
+        <div class="recording-dot"></div>
+        <span>RECORDING</span>
+      </div>
+
+      <div class="test-buttons">
+        <button class="btn btn-primary" id="testBtn" disabled>Start Test</button>
+        <button class="btn btn-stop hidden" id="stopBtn">Stop Test</button>
+      </div>
+    </div>
+
+    <!-- Step 4: Result -->
+    <div class="card result-card" id="resultCard">
+      <div class="card-title">4. Result</div>
+      <div class="result-status" id="resultStatus">READY</div>
+      <div class="result-detail" id="resultDetail">Run test to check for whine</div>
+
+      <div class="spectrum-container">
+        <canvas id="spectrumCanvas"></canvas>
+        <div class="spectrum-info">
+          <span id="peakFreq">Peak: --</span>
+          <span id="highFreqLevel">High Freq: --</span>
+        </div>
+        <div class="level-meter">
+          <span class="level-meter-label">Input</span>
+          <div class="level-meter-bar">
+            <div class="level-meter-fill" id="levelMeterFill"></div>
+          </div>
+          <span class="level-meter-value" id="levelMeterValue">-- dB</span>
+        </div>
+        <div class="input-status">
+          <div class="input-status-dot" id="inputStatusDot"></div>
+          <span id="inputStatusText">No input</span>
+        </div>
+      </div>
+
+      <!-- Settings (collapsed) -->
+      <div class="settings-toggle" id="settingsToggle">
+        <span>Detection Settings</span>
+        <span class="arrow">▼</span>
+      </div>
+      <div class="settings-content" id="settingsContent">
+        <div class="setting-row">
+          <label>Frequency Threshold</label>
+          <input type="range" id="freqThreshold" min="4000" max="20000" value="15500" step="500">
+          <span class="setting-value" id="freqValue">15500 Hz</span>
+        </div>
+        <div class="setting-row">
+          <label>Sensitivity</label>
+          <input type="range" id="sensitivity" min="-80" max="-20" value="-80" step="5">
+          <span class="setting-value" id="sensValue">-80 dB</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recordings -->
+    <div class="card hidden" id="recordingsCard">
+      <div class="card-title">Test Recordings</div>
+      <div id="recordingsList"></div>
+    </div>
+  </div>
+
+  <script>
+    class AudioTest {
+      constructor() {
+        // State
+        this.audioContext = null;
+        this.analyser = null;
+        this.source = null;
+        this.stream = null;
+        this.isRunning = false;
+        this.animationId = null;
+
+        // Detection
+        this.freqThreshold = 15500;
+        this.sensitivity = -80;
+        this.consecutiveDetections = 0;
+        this.requiredConsecutive = 10;
+        this.whineDetected = false;
+
+        // Recording
+        this.mediaRecorder = null;
+        this.recordedChunks = [];
+        this.recordings = [];
+
+        // File upload
+        this.uploadedFile = null;
+        this.isFileMode = false;
+
+        // Elements
+        this.tabFile = document.getElementById('tabFile');
+        this.tabLive = document.getElementById('tabLive');
+        this.contentFile = document.getElementById('contentFile');
+        this.contentLive = document.getElementById('contentLive');
+        this.uploadZone = document.getElementById('uploadZone');
+        this.fileInput = document.getElementById('fileInput');
+        this.fileName = document.getElementById('fileName');
+        this.recordToggle = document.getElementById('recordToggle');
+        this.recordingBadge = document.getElementById('recordingBadge');
+        this.testBtn = document.getElementById('testBtn');
+        this.stopBtn = document.getElementById('stopBtn');
+        this.resultCard = document.getElementById('resultCard');
+        this.resultStatus = document.getElementById('resultStatus');
+        this.resultDetail = document.getElementById('resultDetail');
+        this.peakFreq = document.getElementById('peakFreq');
+        this.highFreqLevel = document.getElementById('highFreqLevel');
+        this.canvas = document.getElementById('spectrumCanvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.settingsToggle = document.getElementById('settingsToggle');
+        this.settingsContent = document.getElementById('settingsContent');
+        this.freqThresholdInput = document.getElementById('freqThreshold');
+        this.sensitivityInput = document.getElementById('sensitivity');
+        this.freqValue = document.getElementById('freqValue');
+        this.sensValue = document.getElementById('sensValue');
+        this.recordingsCard = document.getElementById('recordingsCard');
+        this.recordingsList = document.getElementById('recordingsList');
+        this.levelMeterFill = document.getElementById('levelMeterFill');
+        this.levelMeterValue = document.getElementById('levelMeterValue');
+        this.inputStatusDot = document.getElementById('inputStatusDot');
+        this.inputStatusText = document.getElementById('inputStatusText');
+        this.connectBtn = document.getElementById('connectBtn');
+        this.disconnectBtn = document.getElementById('disconnectBtn');
+        this.connectIcon = document.getElementById('connectIcon');
+        this.connectText = document.getElementById('connectText');
+
+        // Connection state
+        this.isConnected = false;
+
+        this.setupCanvas();
+        this.setupEvents();
+      }
+
+      setupCanvas() {
+        const rect = this.canvas.getBoundingClientRect();
+        this.canvas.width = rect.width * 2;
+        this.canvas.height = 150 * 2;
+        this.ctx.scale(2, 2);
+        this.drawIdle();
+      }
+
+      drawIdle() {
+        const w = this.canvas.width / 2;
+        const h = 150;
+        this.ctx.fillStyle = '#0A0A0A';
+        this.ctx.fillRect(0, 0, w, h);
+        this.ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+        this.ctx.beginPath();
+        this.ctx.moveTo(0, h/2);
+        this.ctx.lineTo(w, h/2);
+        this.ctx.stroke();
+      }
+
+      setupEvents() {
+        // Tabs
+        this.tabFile.onclick = () => this.switchTab('file');
+        this.tabLive.onclick = () => this.switchTab('live');
+
+        // Upload
+        this.uploadZone.onclick = () => this.fileInput.click();
+        this.fileInput.onchange = (e) => this.handleFile(e.target.files[0]);
+        this.uploadZone.ondragover = (e) => { e.preventDefault(); this.uploadZone.style.borderColor = '#FF6B35'; };
+        this.uploadZone.ondragleave = () => { this.uploadZone.style.borderColor = ''; };
+        this.uploadZone.ondrop = (e) => { e.preventDefault(); this.uploadZone.style.borderColor = ''; this.handleFile(e.dataTransfer.files[0]); };
+
+        // Connect
+        this.connectBtn.onclick = () => this.connect();
+        this.disconnectBtn.onclick = () => this.disconnect();
+
+        // Test
+        this.testBtn.onclick = () => this.startTest();
+        this.stopBtn.onclick = () => this.stopTest();
+
+        // Settings
+        this.settingsToggle.onclick = () => {
+          this.settingsToggle.classList.toggle('open');
+          this.settingsContent.classList.toggle('open');
+        };
+        this.freqThresholdInput.oninput = (e) => {
+          this.freqThreshold = parseInt(e.target.value);
+          this.freqValue.textContent = this.freqThreshold + ' Hz';
+        };
+        this.sensitivityInput.oninput = (e) => {
+          this.sensitivity = parseInt(e.target.value);
+          this.sensValue.textContent = this.sensitivity + ' dB';
+        };
+
+        window.onresize = () => this.setupCanvas();
+      }
+
+      switchTab(tab) {
+        // Disconnect when switching tabs
+        if (this.isConnected) {
+          this.disconnect();
+        }
+
+        this.isFileMode = (tab === 'file');
+        this.tabFile.classList.toggle('active', this.isFileMode);
+        this.tabLive.classList.toggle('active', !this.isFileMode);
+        this.contentFile.classList.toggle('active', this.isFileMode);
+        this.contentLive.classList.toggle('active', !this.isFileMode);
+
+        // Reset file selection when switching to live
+        if (!this.isFileMode) {
+          this.uploadedFile = null;
+          this.fileName.textContent = '';
+          this.uploadZone.classList.remove('has-file');
+        }
+      }
+
+      handleFile(file) {
+        if (!file || !file.type.startsWith('audio/')) return;
+        this.uploadedFile = file;
+        this.fileName.textContent = file.name;
+        this.uploadZone.classList.add('has-file');
+        // Enable test button when file is uploaded
+        this.testBtn.disabled = false;
+        this.isConnected = true;
+        this.updateConnectUI(true, file.name);
+      }
+
+      async connect() {
+        if (this.isFileMode) {
+          // For file mode, just click the upload zone
+          this.fileInput.click();
+          return;
+        }
+
+        // For live mode, request microphone access
+        this.connectBtn.disabled = true;
+        this.connectBtn.textContent = 'Connecting...';
+
+        try {
+          this.stream = await navigator.mediaDevices.getUserMedia({
+            audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
+          });
+
+          // Set up audio context for level monitoring
+          this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+          this.analyser = this.audioContext.createAnalyser();
+          this.analyser.fftSize = 4096;
+          this.analyser.smoothingTimeConstant = 0.5;
+
+          this.source = this.audioContext.createMediaStreamSource(this.stream);
+          this.source.connect(this.analyser);
+
+          this.isConnected = true;
+          this.updateConnectUI(true, 'Audio interface');
+
+          // Start monitoring levels (not testing, just showing input)
+          this.isMonitoring = true;
+          this.monitorLevels();
+
+          // Enable test button
+          this.testBtn.disabled = false;
+
+        } catch (err) {
+          console.error(err);
+          this.connectBtn.disabled = false;
+          this.connectBtn.textContent = 'Connect Audio';
+          this.connectText.textContent = err.name === 'NotAllowedError' ? 'Access denied' : err.message;
+          this.connectText.style.color = '#ef4444';
+        }
+      }
+
+      disconnect() {
+        this.isMonitoring = false;
+        this.isConnected = false;
+
+        if (this.monitorAnimationId) {
+          cancelAnimationFrame(this.monitorAnimationId);
+          this.monitorAnimationId = null;
+        }
+
+        if (this.source) {
+          this.source.disconnect();
+          this.source = null;
+        }
+
+        if (this.stream) {
+          this.stream.getTracks().forEach(t => t.stop());
+          this.stream = null;
+        }
+
+        if (this.audioContext) {
+          this.audioContext.close();
+          this.audioContext = null;
+        }
+
+        this.updateConnectUI(false);
+        this.testBtn.disabled = true;
+        this.drawIdle();
+        this.levelMeterFill.style.width = '0%';
+        this.levelMeterValue.textContent = '-- dB';
+        this.updateInputStatus(false, 0);
+      }
+
+      updateConnectUI(connected, deviceName = '') {
+        if (connected) {
+          this.connectIcon.textContent = '●';
+          this.connectIcon.classList.add('connected');
+          this.connectText.textContent = `Connected: ${deviceName}`;
+          this.connectText.classList.add('connected');
+          this.connectText.style.color = '';
+          this.connectBtn.classList.add('hidden');
+          this.disconnectBtn.classList.remove('hidden');
+        } else {
+          this.connectIcon.textContent = '○';
+          this.connectIcon.classList.remove('connected');
+          this.connectText.textContent = 'Not connected';
+          this.connectText.classList.remove('connected');
+          this.connectText.style.color = '';
+          this.connectBtn.classList.remove('hidden');
+          this.connectBtn.disabled = false;
+          this.connectBtn.textContent = 'Connect Audio';
+          this.disconnectBtn.classList.add('hidden');
+        }
+      }
+
+      monitorLevels() {
+        if (!this.isMonitoring || !this.analyser) return;
+
+        const bufferLength = this.analyser.frequencyBinCount;
+        const dataArray = new Float32Array(bufferLength);
+        this.analyser.getFloatFrequencyData(dataArray);
+
+        // Calculate overall level
+        let overallMax = -Infinity;
+        for (let i = 0; i < bufferLength; i++) {
+          if (dataArray[i] > overallMax) overallMax = dataArray[i];
+        }
+
+        // Update level meter
+        const levelPercent = Math.max(0, Math.min(100, ((overallMax + 80) / 80) * 100));
+        this.levelMeterFill.style.width = levelPercent + '%';
+        this.levelMeterValue.textContent = overallMax > -100 ? overallMax.toFixed(0) + ' dB' : '-- dB';
+
+        // Update input status
+        const hasSignal = overallMax > -60;
+        this.updateInputStatus(hasSignal, overallMax);
+
+        // Draw spectrum
+        const nyquist = this.audioContext.sampleRate / 2;
+        const binWidth = nyquist / bufferLength;
+        const thresholdBin = Math.floor(this.freqThreshold / binWidth);
+        this.drawSpectrum(dataArray, thresholdBin);
+
+        this.monitorAnimationId = requestAnimationFrame(() => this.monitorLevels());
+      }
+
+      async startTest() {
+        if (!this.isConnected) return;
+
+        this.whineDetected = false;
+        this.consecutiveDetections = 0;
+        this.recordedChunks = [];
+
+        // Stop monitoring, start testing
+        this.isMonitoring = false;
+        if (this.monitorAnimationId) {
+          cancelAnimationFrame(this.monitorAnimationId);
+          this.monitorAnimationId = null;
+        }
+
+        this.testBtn.classList.add('hidden');
+        this.stopBtn.classList.remove('hidden');
+        this.resultCard.className = 'card result-card testing';
+        this.resultStatus.textContent = 'TESTING...';
+        this.resultDetail.textContent = 'Analyzing audio for high-pitched whine';
+
+        try {
+          if (this.isFileMode && this.uploadedFile) {
+            await this.testFile();
+          } else {
+            // For live mode, audio is already connected
+            if (this.recordToggle.checked) {
+              this.startRecording(this.stream);
+            }
+            this.isRunning = true;
+            this.analyze();
+          }
+        } catch (err) {
+          console.error(err);
+          this.resultStatus.textContent = 'ERROR';
+          this.resultDetail.textContent = err.message;
+          this.stopTest();
+        }
+      }
+
+      async testFile() {
+        this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        this.analyser = this.audioContext.createAnalyser();
+        this.analyser.fftSize = 4096;
+        this.analyser.smoothingTimeConstant = 0.5;
+
+        const audio = new Audio(URL.createObjectURL(this.uploadedFile));
+        this.currentAudio = audio;
+
+        const source = this.audioContext.createMediaElementSource(audio);
+        source.connect(this.analyser);
+        this.analyser.connect(this.audioContext.destination);
+
+        // Recording from destination
+        if (this.recordToggle.checked) {
+          const dest = this.audioContext.createMediaStreamDestination();
+          this.analyser.connect(dest);
+          this.startRecording(dest.stream);
+        }
+
+        audio.onended = () => this.stopTest();
+        audio.play();
+
+        this.isRunning = true;
+        this.analyze();
+      }
+
+
+      startRecording(stream) {
+        const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/webm';
+        this.mediaRecorder = new MediaRecorder(stream, { mimeType });
+        this.mediaRecorder.ondataavailable = (e) => {
+          if (e.data.size > 0) this.recordedChunks.push(e.data);
+        };
+        this.mediaRecorder.start(100);
+        this.recordingBadge.classList.add('active');
+      }
+
+      stopTest() {
+        this.isRunning = false;
+
+        if (this.animationId) {
+          cancelAnimationFrame(this.animationId);
+          this.animationId = null;
+        }
+
+        if (this.currentAudio) {
+          this.currentAudio.pause();
+          this.currentAudio = null;
+        }
+
+        if (this.source) {
+          this.source.disconnect();
+          this.source = null;
+        }
+
+        if (this.stream) {
+          this.stream.getTracks().forEach(t => t.stop());
+          this.stream = null;
+        }
+
+        if (this.audioContext) {
+          this.audioContext.close();
+          this.audioContext = null;
+        }
+
+        // Stop recording
+        if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+          this.mediaRecorder.stop();
+          this.mediaRecorder.onstop = () => this.saveRecording();
+        }
+        this.recordingBadge.classList.remove('active');
+
+        // Show result
+        const passed = !this.whineDetected;
+        this.resultCard.className = 'card result-card ' + (passed ? 'pass' : 'fail');
+        this.resultStatus.textContent = passed ? 'PASS' : 'FAIL';
+        this.resultDetail.textContent = passed ? 'No high-pitched whine detected' : 'High-pitched whine detected!';
+
+        this.testBtn.classList.remove('hidden');
+        this.stopBtn.classList.add('hidden');
+
+        // For live mode, resume monitoring after test
+        if (!this.isFileMode && this.isConnected && this.analyser) {
+          this.isMonitoring = true;
+          this.monitorLevels();
+        } else {
+          // Reset input status and level meter
+          this.updateInputStatus(false, 0);
+          this.levelMeterFill.style.width = '0%';
+          this.levelMeterValue.textContent = '-- dB';
+        }
+      }
+
+      updateInputStatus(hasSignal, level) {
+        if (hasSignal) {
+          this.inputStatusDot.className = 'input-status-dot active';
+          this.inputStatusText.textContent = 'Audio detected';
+          this.inputStatusText.style.color = '#10b981';
+        } else if (level > -100) {
+          this.inputStatusDot.className = 'input-status-dot no-signal';
+          this.inputStatusText.textContent = 'No signal (check input)';
+          this.inputStatusText.style.color = '#ef4444';
+        } else {
+          this.inputStatusDot.className = 'input-status-dot';
+          this.inputStatusText.textContent = 'No input';
+          this.inputStatusText.style.color = '#6B6B6B';
+        }
+      }
+
+      async saveRecording() {
+        if (this.recordedChunks.length === 0) return;
+
+        const webmBlob = new Blob(this.recordedChunks, { type: 'audio/webm' });
+        const passed = !this.whineDetected;
+        const date = new Date().toISOString().slice(0, 10);
+        const time = new Date().toTimeString().slice(0, 5).replace(':', '-');
+
+        // Convert to WAV
+        const wavBlob = await this.convertToWav(webmBlob);
+        const filename = `HiChord_Test_${date}_${time}_${passed ? 'PASS' : 'FAIL'}.wav`;
+
+        // Auto download
+        const url = URL.createObjectURL(wavBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+
+        // Add to list
+        this.recordings.unshift({ filename, passed, url, blob: wavBlob });
+        this.renderRecordings();
+      }
+
+      async convertToWav(webmBlob) {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const arrayBuffer = await webmBlob.arrayBuffer();
+        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+        const numChannels = audioBuffer.numberOfChannels;
+        const sampleRate = audioBuffer.sampleRate;
+        const length = audioBuffer.length;
+
+        // Create WAV buffer
+        const wavBuffer = new ArrayBuffer(44 + length * numChannels * 2);
+        const view = new DataView(wavBuffer);
+
+        // Write WAV header
+        const writeString = (offset, string) => {
+          for (let i = 0; i < string.length; i++) {
+            view.setUint8(offset + i, string.charCodeAt(i));
+          }
+        };
+
+        writeString(0, 'RIFF');
+        view.setUint32(4, 36 + length * numChannels * 2, true);
+        writeString(8, 'WAVE');
+        writeString(12, 'fmt ');
+        view.setUint32(16, 16, true);
+        view.setUint16(20, 1, true);
+        view.setUint16(22, numChannels, true);
+        view.setUint32(24, sampleRate, true);
+        view.setUint32(28, sampleRate * numChannels * 2, true);
+        view.setUint16(32, numChannels * 2, true);
+        view.setUint16(34, 16, true);
+        writeString(36, 'data');
+        view.setUint32(40, length * numChannels * 2, true);
+
+        // Interleave channels and write samples
+        const channels = [];
+        for (let c = 0; c < numChannels; c++) {
+          channels.push(audioBuffer.getChannelData(c));
+        }
+
+        let offset = 44;
+        for (let i = 0; i < length; i++) {
+          for (let c = 0; c < numChannels; c++) {
+            const sample = Math.max(-1, Math.min(1, channels[c][i]));
+            view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+            offset += 2;
+          }
+        }
+
+        audioContext.close();
+        return new Blob([wavBuffer], { type: 'audio/wav' });
+      }
+
+      renderRecordings() {
+        if (this.recordings.length === 0) {
+          this.recordingsCard.classList.add('hidden');
+          return;
+        }
+
+        this.recordingsCard.classList.remove('hidden');
+        this.recordingsList.innerHTML = this.recordings.map((r, i) => `
+          <div class="recording-item ${r.passed ? 'pass' : 'fail'}" id="recording-${i}">
+            <div>
+              <div class="recording-name">${r.filename}</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <span class="recording-result">${r.passed ? 'PASS' : 'FAIL'}</span>
+              <button class="btn btn-small btn-outline" onclick="audioTest.playRecording(${i})">Play</button>
+              <button class="btn btn-small btn-outline" onclick="audioTest.downloadRecording(${i})">Download</button>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      async playRecording(index) {
+        // Stop any current playback
+        if (this.playbackAudio) {
+          this.playbackAudio.pause();
+          this.playbackAudio = null;
+          if (this.playbackContext) {
+            this.playbackContext.close();
+            this.playbackContext = null;
+          }
+          if (this.playbackAnimationId) {
+            cancelAnimationFrame(this.playbackAnimationId);
+            this.playbackAnimationId = null;
+          }
+          // Remove playing class from all items
+          document.querySelectorAll('.recording-item').forEach(el => el.classList.remove('playing'));
+
+          // If clicking same item, just stop
+          if (this.currentPlayingIndex === index) {
+            this.currentPlayingIndex = null;
+            this.drawIdle();
+            return;
+          }
+        }
+
+        this.currentPlayingIndex = index;
+        const r = this.recordings[index];
+
+        // Highlight playing item
+        document.getElementById(`recording-${index}`).classList.add('playing');
+
+        // Set up playback with analyzer
+        this.playbackContext = new (window.AudioContext || window.webkitAudioContext)();
+        this.playbackAnalyser = this.playbackContext.createAnalyser();
+        this.playbackAnalyser.fftSize = 4096;
+        this.playbackAnalyser.smoothingTimeConstant = 0.5;
+
+        this.playbackAudio = new Audio(r.url);
+        const source = this.playbackContext.createMediaElementSource(this.playbackAudio);
+        source.connect(this.playbackAnalyser);
+        this.playbackAnalyser.connect(this.playbackContext.destination);
+
+        this.playbackAudio.onended = () => {
+          document.querySelectorAll('.recording-item').forEach(el => el.classList.remove('playing'));
+          this.currentPlayingIndex = null;
+          if (this.playbackAnimationId) {
+            cancelAnimationFrame(this.playbackAnimationId);
+            this.playbackAnimationId = null;
+          }
+          this.drawIdle();
+          this.levelMeterFill.style.width = '0%';
+          this.levelMeterValue.textContent = '-- dB';
+          this.updateInputStatus(false, 0);
+          if (this.playbackContext) {
+            this.playbackContext.close();
+            this.playbackContext = null;
+          }
+        };
+
+        this.playbackAudio.play();
+        this.analyzePlayback();
+      }
+
+      analyzePlayback() {
+        if (!this.playbackAudio || this.playbackAudio.paused) return;
+
+        const bufferLength = this.playbackAnalyser.frequencyBinCount;
+        const dataArray = new Float32Array(bufferLength);
+        this.playbackAnalyser.getFloatFrequencyData(dataArray);
+
+        const nyquist = this.playbackContext.sampleRate / 2;
+        const binWidth = nyquist / bufferLength;
+        const thresholdBin = Math.floor(this.freqThreshold / binWidth);
+
+        // Calculate overall input level
+        let overallMax = -Infinity;
+        for (let i = 0; i < bufferLength; i++) {
+          if (dataArray[i] > overallMax) overallMax = dataArray[i];
+        }
+
+        // Update level meter
+        const levelPercent = Math.max(0, Math.min(100, ((overallMax + 80) / 80) * 100));
+        this.levelMeterFill.style.width = levelPercent + '%';
+        this.levelMeterValue.textContent = overallMax > -100 ? overallMax.toFixed(0) + ' dB' : '-- dB';
+
+        // Update input status
+        const hasSignal = overallMax > -60;
+        this.updateInputStatus(hasSignal, overallMax);
+
+        // Find peak in high freq zone
+        let maxLevel = -Infinity;
+        let peakFrequency = 0;
+
+        for (let i = thresholdBin; i < bufferLength; i++) {
+          if (dataArray[i] > maxLevel) {
+            maxLevel = dataArray[i];
+            peakFrequency = i * binWidth;
+          }
+        }
+
+        this.peakFreq.textContent = `Peak: ${peakFrequency > 0 && maxLevel > -80 ? (peakFrequency/1000).toFixed(1) + ' kHz' : '--'}`;
+        this.highFreqLevel.textContent = `High Freq: ${maxLevel > -100 ? maxLevel.toFixed(0) + ' dB' : '--'}`;
+
+        this.drawSpectrumPlayback(dataArray, thresholdBin);
+        this.playbackAnimationId = requestAnimationFrame(() => this.analyzePlayback());
+      }
+
+      drawSpectrumPlayback(dataArray, thresholdBin) {
+        const w = this.canvas.width / 2;
+        const h = 150;
+
+        this.ctx.fillStyle = '#0A0A0A';
+        this.ctx.fillRect(0, 0, w, h);
+
+        const barWidth = w / (dataArray.length / 2);
+
+        for (let i = 0; i < dataArray.length / 2; i++) {
+          const db = dataArray[i];
+          const barHeight = Math.max(0, (db + 100) / 100) * h;
+
+          if (i >= thresholdBin) {
+            this.ctx.fillStyle = '#ef4444';
+          } else {
+            this.ctx.fillStyle = '#FF6B35';
+          }
+
+          this.ctx.fillRect(i * barWidth, h - barHeight, barWidth - 1, barHeight);
+        }
+
+        // Threshold line
+        const thresholdX = (this.freqThreshold / (this.playbackContext.sampleRate / 2)) * w;
+        this.ctx.strokeStyle = 'rgba(239, 68, 68, 0.8)';
+        this.ctx.setLineDash([4, 4]);
+        this.ctx.beginPath();
+        this.ctx.moveTo(thresholdX, 0);
+        this.ctx.lineTo(thresholdX, h);
+        this.ctx.stroke();
+        this.ctx.setLineDash([]);
+
+        // Sensitivity line
+        const sensY = h - ((this.sensitivity + 100) / 100) * h;
+        this.ctx.strokeStyle = 'rgba(255, 184, 0, 0.8)';
+        this.ctx.setLineDash([4, 4]);
+        this.ctx.beginPath();
+        this.ctx.moveTo(thresholdX, sensY);
+        this.ctx.lineTo(w, sensY);
+        this.ctx.stroke();
+        this.ctx.setLineDash([]);
+      }
+
+      downloadRecording(index) {
+        const r = this.recordings[index];
+        const a = document.createElement('a');
+        a.href = r.url;
+        a.download = r.filename;
+        a.click();
+      }
+
+      analyze() {
+        if (!this.isRunning) return;
+
+        const bufferLength = this.analyser.frequencyBinCount;
+        const dataArray = new Float32Array(bufferLength);
+        this.analyser.getFloatFrequencyData(dataArray);
+
+        const nyquist = this.audioContext.sampleRate / 2;
+        const binWidth = nyquist / bufferLength;
+        const thresholdBin = Math.floor(this.freqThreshold / binWidth);
+
+        // Calculate overall input level (average of all frequencies)
+        let sum = 0;
+        let overallMax = -Infinity;
+        for (let i = 0; i < bufferLength; i++) {
+          sum += dataArray[i];
+          if (dataArray[i] > overallMax) overallMax = dataArray[i];
+        }
+        const avgLevel = sum / bufferLength;
+
+        // Update level meter (use peak level, scale from -80dB to 0dB)
+        const levelPercent = Math.max(0, Math.min(100, ((overallMax + 80) / 80) * 100));
+        this.levelMeterFill.style.width = levelPercent + '%';
+        this.levelMeterValue.textContent = overallMax > -100 ? overallMax.toFixed(0) + ' dB' : '-- dB';
+
+        // Update input status - signal detected if level above -60dB
+        const hasSignal = overallMax > -60;
+        this.updateInputStatus(hasSignal, overallMax);
+
+        // Find peak in high freq zone
+        let maxLevel = -Infinity;
+        let peakFrequency = 0;
+
+        for (let i = thresholdBin; i < bufferLength; i++) {
+          if (dataArray[i] > maxLevel) {
+            maxLevel = dataArray[i];
+            peakFrequency = i * binWidth;
+          }
+        }
+
+        // Update UI
+        this.peakFreq.textContent = `Peak: ${peakFrequency > 0 && maxLevel > -80 ? (peakFrequency/1000).toFixed(1) + ' kHz' : '--'}`;
+        this.highFreqLevel.textContent = `High Freq: ${maxLevel > -100 ? maxLevel.toFixed(0) + ' dB' : '--'}`;
+
+        // Detection
+        if (maxLevel > this.sensitivity) {
+          this.consecutiveDetections++;
+          if (this.consecutiveDetections >= this.requiredConsecutive) {
+            this.whineDetected = true;
+            this.resultStatus.textContent = 'WHINE DETECTED';
+            this.resultCard.className = 'card result-card fail';
+          }
+        } else {
+          this.consecutiveDetections = 0;
+        }
+
+        this.drawSpectrum(dataArray, thresholdBin);
+        this.animationId = requestAnimationFrame(() => this.analyze());
+      }
+
+      drawSpectrum(dataArray, thresholdBin) {
+        const w = this.canvas.width / 2;
+        const h = 150;
+
+        this.ctx.fillStyle = '#0A0A0A';
+        this.ctx.fillRect(0, 0, w, h);
+
+        const barWidth = w / (dataArray.length / 2);
+
+        for (let i = 0; i < dataArray.length / 2; i++) {
+          const db = dataArray[i];
+          const barHeight = Math.max(0, (db + 100) / 100) * h;
+
+          if (i >= thresholdBin) {
+            this.ctx.fillStyle = '#ef4444';
+          } else {
+            this.ctx.fillStyle = '#FF6B35';
+          }
+
+          this.ctx.fillRect(i * barWidth, h - barHeight, barWidth - 1, barHeight);
+        }
+
+        // Threshold line
+        const thresholdX = (this.freqThreshold / (this.audioContext.sampleRate / 2)) * w;
+        this.ctx.strokeStyle = 'rgba(239, 68, 68, 0.8)';
+        this.ctx.setLineDash([4, 4]);
+        this.ctx.beginPath();
+        this.ctx.moveTo(thresholdX, 0);
+        this.ctx.lineTo(thresholdX, h);
+        this.ctx.stroke();
+        this.ctx.setLineDash([]);
+
+        // Sensitivity line
+        const sensY = h - ((this.sensitivity + 100) / 100) * h;
+        this.ctx.strokeStyle = 'rgba(255, 184, 0, 0.8)';
+        this.ctx.setLineDash([4, 4]);
+        this.ctx.beginPath();
+        this.ctx.moveTo(thresholdX, sensY);
+        this.ctx.lineTo(w, sensY);
+        this.ctx.stroke();
+        this.ctx.setLineDash([]);
+      }
+    }
+
+    const audioTest = new AudioTest();
+  </script>
+</body>
+</html>
