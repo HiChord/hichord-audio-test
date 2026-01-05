@@ -556,10 +556,21 @@
     /* Connect status */
     .connect-instructions {
       font-size: 13px;
-      color: var(--gray);
+      color: var(--black);
       text-align: center;
       margin-bottom: 16px;
-      line-height: 1.5;
+      line-height: 1.6;
+      background: #FFF3E0;
+      border: 2px solid var(--orange);
+      border-radius: 6px;
+      padding: 16px;
+    }
+
+    .connect-instructions strong {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--orange);
+      font-weight: 700;
     }
 
     .connect-status {
@@ -712,7 +723,10 @@
     <!-- Step 2: Connect -->
     <div class="card" id="connectCard">
       <div class="card-title">2. Connect</div>
-      <p class="connect-instructions">Click "Connect Audio" and select your audio interface (e.g. MiniFuse 2) from the Chrome popup.</p>
+      <div class="connect-instructions">
+        <strong>Important</strong>
+        Click "Connect Audio" and select your audio interface (e.g. MiniFuse 2) from the Chrome popup. Make sure you are testing the direct sound of HiChord into the interface, and not testing using the computer microphone.
+      </div>
       <div class="connect-status" id="connectStatus">
         <div class="connect-icon" id="connectIcon">○</div>
         <div class="connect-text" id="connectText">Not connected</div>
