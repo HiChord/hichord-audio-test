@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>HiChord Audio Test</title>
+  <!-- Google API for Drive uploads -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://apis.google.com/js/api.js" async defer></script>
   <style>
     :root {
       --white: #FAFAFA;
@@ -608,6 +611,93 @@
       display: none !important;
     }
 
+    /* Google Drive */
+    .drive-card {
+      background: #E8F5E9;
+      border-color: #4CAF50;
+    }
+
+    .drive-card.disconnected {
+      background: var(--light-gray);
+      border-color: var(--border);
+    }
+
+    .drive-status {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .drive-icon {
+      width: 32px;
+      height: 32px;
+    }
+
+    .drive-info {
+      flex: 1;
+    }
+
+    .drive-title {
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .drive-subtitle {
+      font-size: 12px;
+      color: var(--gray);
+    }
+
+    .drive-connected .drive-subtitle {
+      color: var(--green);
+    }
+
+    .btn-google {
+      background: var(--white);
+      border: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .btn-google:hover {
+      border-color: var(--black);
+      background: var(--light-gray);
+    }
+
+    .btn-google img {
+      width: 18px;
+      height: 18px;
+    }
+
+    .upload-status {
+      font-size: 12px;
+      padding: 8px 12px;
+      border-radius: 4px;
+      margin-top: 8px;
+      display: none;
+    }
+
+    .upload-status.uploading {
+      display: block;
+      background: #FFF3E0;
+      color: var(--orange);
+    }
+
+    .upload-status.success {
+      display: block;
+      background: #E8F5E9;
+      color: var(--green);
+    }
+
+    .upload-status.error {
+      display: block;
+      background: #FFEBEE;
+      color: var(--red);
+    }
+
     /* Settings collapse */
     .settings-toggle {
       display: flex;
@@ -796,6 +886,30 @@
       </div>
     </div>
 
+    <!-- Google Drive -->
+    <div class="card drive-card disconnected" id="driveCard">
+      <div class="card-title">Google Drive Backup</div>
+      <div class="drive-status" id="driveStatus">
+        <svg class="drive-icon" viewBox="0 0 87.3 78" xmlns="http://www.w3.org/2000/svg">
+          <path d="M6.6 66.85l3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8H0c0 1.55.4 3.1 1.2 4.5l5.4 9.35z" fill="#0066da"/>
+          <path d="M43.65 25L29.9 1.2c-1.35.8-2.5 1.9-3.3 3.3L1.2 52.7c-.8 1.4-1.2 2.95-1.2 4.5h27.5l16.15-32.2z" fill="#00ac47"/>
+          <path d="M73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5H59.85L73.55 76.8z" fill="#ea4335"/>
+          <path d="M43.65 25L57.4 1.2c-1.35-.8-2.9-1.2-4.5-1.2H34.35c-1.6 0-3.15.45-4.45 1.2L43.65 25z" fill="#00832d"/>
+          <path d="M59.85 53H27.5L13.75 76.8c1.35.8 2.9 1.2 4.5 1.2h50.8c1.6 0 3.15-.45 4.5-1.2L59.85 53z" fill="#2684fc"/>
+          <path d="M73.4 26.5l-12.7-22c-.8-1.4-1.95-2.5-3.3-3.3L43.65 25l16.2 28h27.45c0-1.55-.4-3.1-1.2-4.5l-12.7-22z" fill="#ffba00"/>
+        </svg>
+        <div class="drive-info">
+          <div class="drive-title" id="driveTitle">Connect to Google Drive</div>
+          <div class="drive-subtitle" id="driveSubtitle">Recordings will be backed up automatically</div>
+        </div>
+      </div>
+      <button class="btn btn-google" id="driveConnectBtn">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+        <span id="driveConnectText">Sign in with Google</span>
+      </button>
+      <div class="upload-status" id="uploadStatus"></div>
+    </div>
+
     <!-- Recordings -->
     <div class="card hidden" id="recordingsCard">
       <div class="card-title">Test Recordings</div>
@@ -804,6 +918,202 @@
   </div>
 
   <script>
+    // Google Drive Integration
+    // To set up:
+    // 1. Go to https://console.cloud.google.com/
+    // 2. Create a new project (or use existing)
+    // 3. Enable "Google Drive API" in APIs & Services
+    // 4. Create OAuth 2.0 credentials (Web application)
+    // 5. Add authorized JavaScript origin: https://hichord.github.io
+    // 6. Copy Client ID below
+    const GOOGLE_CLIENT_ID = '505746951493-5ntp8khn5a94gibguo779uj3jv42isfg.apps.googleusercontent.com';
+    const GOOGLE_DRIVE_FOLDER_ID = '1-pr9KgRZKqhI0QhhjhKXvKccpHqrLJpF';
+    const SCOPES = 'https://www.googleapis.com/auth/drive.file';
+
+    let googleAccessToken = null;
+    let tokenClient = null;
+    let gapiInited = false;
+    let gisInited = false;
+
+    // Initialize Google API client
+    function gapiLoaded() {
+      gapi.load('client', initializeGapiClient);
+    }
+
+    async function initializeGapiClient() {
+      await gapi.client.init({
+        discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
+      });
+      gapiInited = true;
+      maybeEnableButtons();
+    }
+
+    function gisLoaded() {
+      if (!GOOGLE_CLIENT_ID) {
+        console.log('Google Drive: No CLIENT_ID configured, skipping init');
+        gisInited = true;
+        return;
+      }
+      tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: GOOGLE_CLIENT_ID,
+        scope: SCOPES,
+        callback: '', // defined later
+      });
+      gisInited = true;
+      maybeEnableButtons();
+    }
+
+    function maybeEnableButtons() {
+      if (gapiInited && gisInited) {
+        if (!GOOGLE_CLIENT_ID) {
+          // Hide Drive card if not configured
+          document.getElementById('driveCard').style.display = 'none';
+          return;
+        }
+        // Check for stored token
+        const storedToken = localStorage.getItem('googleDriveToken');
+        if (storedToken) {
+          googleAccessToken = storedToken;
+          gapi.client.setToken({ access_token: storedToken });
+          updateDriveUI(true);
+        }
+      }
+    }
+
+    function handleDriveAuth() {
+      if (!GOOGLE_CLIENT_ID) {
+        showUploadStatus('error', 'Google Drive not configured. Add Client ID to enable.');
+        console.error('Google Drive: No CLIENT_ID configured');
+        return;
+      }
+
+      if (googleAccessToken) {
+        // Sign out
+        google.accounts.oauth2.revoke(googleAccessToken, () => {
+          googleAccessToken = null;
+          localStorage.removeItem('googleDriveToken');
+          gapi.client.setToken('');
+          updateDriveUI(false);
+        });
+        return;
+      }
+
+      tokenClient.callback = async (resp) => {
+        if (resp.error !== undefined) {
+          throw resp;
+        }
+        googleAccessToken = resp.access_token;
+        localStorage.setItem('googleDriveToken', googleAccessToken);
+        updateDriveUI(true);
+      };
+
+      if (googleAccessToken === null) {
+        tokenClient.requestAccessToken({ prompt: 'consent' });
+      } else {
+        tokenClient.requestAccessToken({ prompt: '' });
+      }
+    }
+
+    function updateDriveUI(connected) {
+      const card = document.getElementById('driveCard');
+      const title = document.getElementById('driveTitle');
+      const subtitle = document.getElementById('driveSubtitle');
+      const btn = document.getElementById('driveConnectBtn');
+      const btnText = document.getElementById('driveConnectText');
+      const status = document.getElementById('driveStatus');
+
+      if (connected) {
+        card.classList.remove('disconnected');
+        card.classList.add('drive-connected');
+        title.textContent = 'Google Drive Connected';
+        subtitle.textContent = 'Recordings will upload automatically';
+        btnText.textContent = 'Disconnect';
+      } else {
+        card.classList.add('disconnected');
+        card.classList.remove('drive-connected');
+        title.textContent = 'Connect to Google Drive';
+        subtitle.textContent = 'Recordings will be backed up automatically';
+        btnText.textContent = 'Sign in with Google';
+      }
+    }
+
+    function showUploadStatus(status, message) {
+      const el = document.getElementById('uploadStatus');
+      el.className = 'upload-status ' + status;
+      el.textContent = message;
+
+      if (status === 'success' || status === 'error') {
+        setTimeout(() => {
+          el.className = 'upload-status';
+        }, 5000);
+      }
+    }
+
+    async function uploadToDrive(blob, filename) {
+      if (!googleAccessToken) {
+        console.log('Not connected to Google Drive');
+        return false;
+      }
+
+      showUploadStatus('uploading', 'Uploading to Google Drive...');
+
+      try {
+        const metadata = {
+          name: filename,
+          mimeType: 'audio/wav',
+          parents: [GOOGLE_DRIVE_FOLDER_ID]
+        };
+
+        const form = new FormData();
+        form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+        form.append('file', blob);
+
+        const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink', {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + googleAccessToken
+          },
+          body: form
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          if (response.status === 401) {
+            // Token expired, clear it
+            googleAccessToken = null;
+            localStorage.removeItem('googleDriveToken');
+            updateDriveUI(false);
+            showUploadStatus('error', 'Session expired. Please sign in again.');
+            return false;
+          }
+          throw new Error(error.error?.message || 'Upload failed');
+        }
+
+        const result = await response.json();
+        console.log('Uploaded to Drive:', result);
+        showUploadStatus('success', 'Uploaded to Google Drive ✓');
+        return true;
+      } catch (error) {
+        console.error('Drive upload error:', error);
+        showUploadStatus('error', 'Upload failed: ' + error.message);
+        return false;
+      }
+    }
+
+    // Initialize when page loads
+    window.addEventListener('load', () => {
+      // Load Google API
+      if (typeof gapi !== 'undefined') {
+        gapiLoaded();
+      }
+      if (typeof google !== 'undefined' && google.accounts) {
+        gisLoaded();
+      }
+
+      // Set up drive button
+      document.getElementById('driveConnectBtn').addEventListener('click', handleDriveAuth);
+    });
+
     class AudioTest {
       constructor() {
         // State
@@ -1251,12 +1561,17 @@
         const wavBlob = await this.convertToWav(webmBlob);
         const filename = `HiChord_Test_${date}_${time}_${passed ? 'PASS' : 'FAIL'}.wav`;
 
-        // Auto download
+        // Auto download locally
         const url = URL.createObjectURL(wavBlob);
         const a = document.createElement('a');
         a.href = url;
         a.download = filename;
         a.click();
+
+        // Upload to Google Drive if connected
+        if (googleAccessToken) {
+          uploadToDrive(wavBlob, filename);
+        }
 
         // Add to list
         this.recordings.unshift({ filename, passed, url, blob: wavBlob });
